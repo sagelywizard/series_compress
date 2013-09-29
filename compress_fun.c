@@ -27,7 +27,6 @@ data_point compress_int(int64_t first, int64_t second) {
     data_point delta;
     delta.bit_count = 64;
     datum.as_int64_t = first - second;
-    print_int_as_bin(datum.as_int64_t);
     if (datum.as_int64_t == 0) {
         delta.datum = 0;
         delta.bit_count = 0;
@@ -76,7 +75,7 @@ int compress(ErlNifBinary * source, ErlNifBinary * dest) {
     union {
         double * as_double;
         int64_t * as_int64_t;
-        char * as_bytes;
+        unsigned char * as_bytes;
     } source_data;
 
     source_data.as_bytes = source->data;
@@ -87,15 +86,15 @@ int compress(ErlNifBinary * source, ErlNifBinary * dest) {
     for (int i=0; i<size; i++) {
         prediction.as_double = predict_data_point(extrapolation_points);
 
-        printf("predictio: ");
-        print_int_as_bin(prediction.as_int64_t);
-        printf("\n");
-        printf("goes in  : %d: ", i);
-        print_int_as_bin(source_data.as_int64_t[i]);
-        printf("\n");
-        printf("delta in : %d: ", i);
+//        printf("predictio: ");
+//        print_int_as_bin(prediction.as_int64_t);
+//        printf("\n");
+//        printf("goes in  : %d: ", i);
+//        print_int_as_bin(source_data.as_int64_t[i]);
+//        printf("\n");
+//        printf("delta in : %d: ", i);
         delta = compress_int(source_data.as_int64_t[i], prediction.as_int64_t);
-        printf("\n");
+//        printf("\n");
         header.bit_count = 5;
         header.datum = delta.bit_count << 58;
         combine(&workspace, header);
@@ -106,11 +105,14 @@ int compress(ErlNifBinary * source, ErlNifBinary * dest) {
         }
         extrapolation_points[4] = source_data.as_double[i];
     }
+//    printf("Herpa derpa\n");
     workspace.data[0] |= ((source->size*8) << 32);
+//    printf("Herpa derpa 1\n");
     for (int i=0; i<=workspace.i; i++) {
         destination.as_uint64_t[i] = workspace.data[i];
     }
-    printf("\n\n--\n\n");
+//    printf("Herpa derpa 2\n");
+//    printf("\n\n--\n\n");
     return workspace.total_bits;
 }
 

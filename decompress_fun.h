@@ -4,6 +4,6 @@
 #include "series_compress.h"
 #include "util.h"
 
-int decompress(ErlNifBinary * source0, ErlNifBinary * dest0);
+int decompress(ErlNifBinary * source0, ErlNifBinary * destination);
 
 #endif

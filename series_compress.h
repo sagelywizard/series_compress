@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <limits.h>
+#include "erl_nif.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -16,7 +17,7 @@ union conversion {
     uint32_t * as_uint32_t;
     uint64_t * as_uint64_t;
     double * as_double;
-    char * as_bytes;
+    unsigned char * as_bytes;
 };
 
 typedef struct {
@@ -31,17 +32,17 @@ typedef struct {
     uint64_t * data;
 } workspace;
 
-typedef struct {
-    char * data;
-    size_t size;
-} ErlNifBinary;
+//typedef struct {
+//    unsigned char * data;
+//    size_t size;
+//} ErlNifBinary;
 
 union point_conversion {
     int64_t as_int64_t;
     uint32_t as_uint32_t;
     uint64_t as_uint64_t;
     double as_double;
-    char as_bytes;
+    unsigned char as_bytes;
 };
 
 int read_block(workspace * workspace, uint64_t * dest);

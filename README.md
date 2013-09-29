@@ -14,12 +14,8 @@ would be compressed to:
 
 Then, a six-bit header containing the compressed length is prepended to the compressed delta. Since number of bits in the previous example was 10 (ie. 001010 bits), the fully compressed data point would be `0010100110101110`.
 
-#### Example Usage:
+#### API
 
-    1> TimeSeries = [15,18,19,20,19,20,23,25].
-    [15,18,19,20,19,20,23,25]
-    2> TimeSeriesBinary = series_compress:int64_list_to_binary(TimeSeries).
-    <<0,0,0,0,0,0,0,15,0,0,0,0,0,0,0,18,0,0,0,0,0,0,0,19,0,0,
-      0,0,0,...>>
-    3> Compressed = series_compress:compress64(TimeSeriesBinary).
-    etc, etc, etc
+    compress/1: Given a binary or a list, will return a compressed binary.
+    decompress/1: Given a compressed binary, will return an uncompressed binary.
+    append/2: Given a compressed binary and an uncompressed binary, will return a compressed binary with uncompressed binary appended.

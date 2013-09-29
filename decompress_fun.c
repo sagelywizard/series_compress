@@ -2,16 +2,16 @@
 #include "bindbg.h"
 #include "util.h"
 
-int decompress(ErlNifBinary * source0, ErlNifBinary * dest0) {
-    printf("\n");
+#define MAX_CODEPOINT_BYTES 9
+
+int decompress(ErlNifBinary * source0, ErlNifBinary * destination) {
     uint64_t decompressed_size;
     double extrapolation_points[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
+    double * placeholder = malloc(source0->size*9);
     union conversion source;
     union conversion dest;
     workspace workspace;
-    workspace.data = malloc(dest0->size);
     source.as_bytes = source0->data;
-    dest.as_bytes = dest0->data;
     workspace.data = source.as_uint64_t;
     workspace.i = 0;
     workspace.bits = 0;
@@ -29,19 +29,12 @@ int decompress(ErlNifBinary * source0, ErlNifBinary * dest0) {
 
     while (workspace.total_bits < decompressed_size) {
         prediction.as_double = predict_data_point(extrapolation_points);
-        printf("predictio: ");
-        print_int_as_bin(prediction.as_int64_t);
-        printf("\n");
-        printf("delta out: %d: ", i);
         if (!read_block(&workspace, &delta)) {
-            return 1;
+            return -1;
         }
         the_d.as_uint64_t = delta;
         thingg.as_int64_t = the_d.as_int64_t + prediction.as_int64_t;
-        printf("comes out: %d: ", i);
-        print_int_as_bin(thingg.as_int64_t);
-        printf("\n");
-        dest.as_double[i] = thingg.as_double;
+        placeholder[i] = thingg.as_double;
 
         for (int j=0; j<4; j++) {
             extrapolation_points[j] = extrapolation_points[j+1];
@@ -49,7 +42,13 @@ int decompress(ErlNifBinary * source0, ErlNifBinary * dest0) {
         extrapolation_points[4] = thingg.as_double;
         i += 1;
     }
-    return 0;
+    enif_alloc_binary(i*8, destination);
+    dest.as_bytes = destination->data;
+    for (size_t j=0; j<i; j++) {
+        dest.as_double[j] = placeholder[j];
+    }
+    free(placeholder);
+    return i;
 }
 
 int read_block(workspace * workspace, uint64_t * dest) {
@@ -61,7 +60,6 @@ int read_block(workspace * workspace, uint64_t * dest) {
         length |= workspace->data[workspace->i] >> (64 - ((6 + workspace->bits) % 64));
     }
     length += 1;
-    printf("LENGTH: %llu\n", length);
     workspace->bits = (workspace->bits + 6) % 64;
     code_point = (workspace->data[workspace->i] << workspace->bits);
     if ((workspace->bits + length) > 64) {
@@ -79,10 +77,6 @@ int read_block(workspace * workspace, uint64_t * dest) {
             cp.as_uint64_t |= (ULLONG_MAX << length);
         }
     }
-    print_uint_as_bin(cp.as_uint64_t);
-    printf("\nFUUUU\n");
-    print_uint_as_bin((ULLONG_MAX << length));
-    printf("\n");
     workspace->bits = (workspace->bits + length) % 64;
     workspace->total_bits += 64;
     (*dest) = cp.as_uint64_t;
